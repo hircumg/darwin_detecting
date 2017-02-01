@@ -164,7 +164,7 @@ def initialize():
     # reset()
     # reset_arms(darwin)
 
-    angle_array=np.load('/home/robotis/catkin_ws/src/darwin_fighter/scripts/ad.npy')
+    angle_array=np.load('ad.npy')
     rospy.loginfo("\n======\narray:\n")
     rospy.loginfo(angle_array)
     rospy.loginfo("======\n")
