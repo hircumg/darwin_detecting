@@ -164,17 +164,15 @@ def initialize():
     # reset()
     # reset_arms(darwin)
 
-    angle_array=np.load('/home/robotis/catkin_ws/src/darwinvheight/scripts/angles_darwin_1.npy')
+    angle_array=np.load('/home/robotis/catkin_ws/src/darwin_fighter/scripts/ad.npy')
     rospy.loginfo("\n======\narray:\n")
     rospy.loginfo(angle_array)
-    rospy.loginfo(type(angle_array))
     rospy.loginfo("======\n")
-    np.save('ad.npy', angle_array)
     # rospy.loginfo('Setting the initital position')
-    darwin.set_angles_slow(get_angles_transformed(angle_array[0, :]),2)
+    darwin.set_angles_slow(get_angles_transformed(angle_array),2)
     time.sleep(4)
     rospy.loginfo('Start walking')
-    loop_walk(darwin, angle_array)
+    #loop_walk(darwin, angle_array)
 
 if __name__ == '__main__':
     try:
