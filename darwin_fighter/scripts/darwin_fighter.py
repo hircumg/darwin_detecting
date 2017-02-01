@@ -160,7 +160,7 @@ def loop_walk(darwin, input_angles):
 def initialize():
     rospy.init_node('darwin_file_walker', anonymous=True)
     darwin = Darwin()
-    darwin.set_angles_slow(get_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
+    darwin.set_angles_slow(get_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 1)
     time.sleep(2)
     # reset()
     # reset_arms(darwin)
@@ -170,7 +170,7 @@ def initialize():
     rospy.loginfo(angle_array)
     rospy.loginfo("======\n")
     # rospy.loginfo('Setting the initital position')
-    darwin.set_angles_slow(get_angles_transformed(angle_array), 2)
+    darwin.set_angles_slow(get_angles_transformed(angle_array), 1)
     time.sleep(4)
     rospy.loginfo('Start walking')
     # loop_walk(darwin, angle_array)
