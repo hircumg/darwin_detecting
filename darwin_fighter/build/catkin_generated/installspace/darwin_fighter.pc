@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: darwin_fighter
+Description: Description of darwin_fighter
+Version: 0.0.0
+Cflags: 
+Libs: -L/usr/local/lib 
+Requires: 

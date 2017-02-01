@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/robotis/catkin_ws/src/darwin_fighter/build/devel/setup.sh
