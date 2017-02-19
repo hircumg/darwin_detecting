@@ -127,7 +127,7 @@ arm_angle_mappings = [
     {'name': 'j_low_arm_r', 'sign': -1},
     {'name': 'j_shoulder_r', 'sign': 1},
     {'name': 'j_high_arm_l', 'sign': -1}, 
-    {'name': 'j_low_arm_l', 'sign': 1},
+    {'name': 'j_low_arm_l', 'sign': -1},
     {'name': 'j_shoulder_l', 'sign': -1}
 ]
 
@@ -138,21 +138,24 @@ def reset():
 
 
 def get_leg_angles_transformed(angles):
-    """
-transforms the angles provided in array into the dictionary and converts degrees to radians
-    :param angles:
-    :return:
-    """
+    
+    # transforms the angles provided in array into the dictionary and converts degrees to radians
+    
     result = {}
 
     for i in range(0, len(angles)):
         result[leg_angle_mappings[i]['name']] = leg_angle_mappings[i]['sign']*angles[i]*math.pi/180
     return result
 
+
 def get_arm_angles_transformed(angles):
     result = {}
-    for i in range(0, len(angles)):
-        result[arm_angle_mappings[i]['name']] = arm_angle_mappings[i]['sign']*angles[i]
+    result['j_high_arm_r'] = angles['j_high_arm_r'] + math.pi/4
+    result['j_low_arm_r'] = angles['j_low_arm_r'] - math.pi/2
+    result['j_shoulder_r'] = angles['j_shoulder_r']
+    result['j_high_arm_l'] = angles['j_high_arm_l']*(-1) - math.pi/4
+    result['j_low_arm_l'] = angles['j_low_arm_l']*(-1) + math.pi/2
+    result['j_shoulder_l'] = angles['j_shoulder_l']*(-1)
     return result
 
 
@@ -166,6 +169,7 @@ def reset_arms_fight(darwin):
         'j_shoulder_l': 0,
     }, 2)
 
+
 def reset_arms(darwin):
     angles = { 
         'j_high_arm_r': 0 + math.pi/4,      # max: 17p/36=85    | min: -p/2 | zero: p/4 | up
@@ -176,6 +180,18 @@ def reset_arms(darwin):
         'j_shoulder_l': (-1)*0              # max: p            | min: -p   | zero: 0   | up
     }
     darwin.set_angles_slow(angles, 1);
+
+
+def reset_arms1(darwin):
+    angles = { 
+        'j_high_arm_r': 0,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': 0,
+        'j_high_arm_l': 0,
+        'j_low_arm_l': 0,
+        'j_shoulder_l': 0
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1);
 
 
 def loop_walk(darwin, input_angles):
@@ -195,7 +211,7 @@ def initialize():
     # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
     # time.sleep(2)
     # reset()
-    reset_arms(darwin)
+    reset_arms1(darwin)
 
     # angle_array = np.load('ad.npy')
     # rospy.loginfo("\n======\narray:\n")
