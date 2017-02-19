@@ -62,6 +62,13 @@ class Darwin:
     def set_angles(self, angles):
         for j, v in angles.items():
             if j not in self.joints:
+                rospy.logeror("Invalid joint name " + j)
+                continue
+            self._pub_joints[j].publish(v)
+
+    def jet_angles(self, angles):
+        for j, v in angles.items():
+            if j not in self.joints:
                 rospy.logerror("Invalid joint name "+j)
                 continue
             self._pub_joints[j].publish(v)
@@ -99,9 +106,8 @@ def get_distance(anglesa, anglesb):
     d /= len(joints)
     return d
 
-
 # the following array represent the joint mapping from file to real joint names
-angle_mappings = [
+leg_angle_mappings = [
     {'name': 'j_pelvis_l', 'sign': -1},
     {'name': 'j_thigh2_l', 'sign': 1},
     {'name': 'j_thigh1_l', 'sign': -1},
@@ -116,13 +122,22 @@ angle_mappings = [
     {'name': 'j_ankle2_r', 'sign': 1}
 ]
 
+arm_angle_mappings = [
+    {'name': 'j_high_arm_r', 'sign': 1}, 
+    {'name': 'j_low_arm_r', 'sign': -1},
+    {'name': 'j_shoulder_r', 'sign': 1},
+    {'name': 'j_high_arm_l', 'sign': -1}, 
+    {'name': 'j_low_arm_l', 'sign': 1},
+    {'name': 'j_shoulder_l', 'sign': -1}
+]
+
 
 def reset():
-    reset_w = rospy.ServiceProxy('/gazebo/reset_world', std_srvs.srv.Empty)
+
     reset_w()
 
 
-def get_angles_transformed(angles):
+def get_leg_angles_transformed(angles):
     """
 transforms the angles provided in array into the dictionary and converts degrees to radians
     :param angles:
@@ -131,11 +146,17 @@ transforms the angles provided in array into the dictionary and converts degrees
     result = {}
 
     for i in range(0, len(angles)):
-        result[angle_mappings[i]['name']] = angle_mappings[i]['sign']*angles[i]*math.pi/180
+        result[leg_angle_mappings[i]['name']] = leg_angle_mappings[i]['sign']*angles[i]*math.pi/180
+    return result
+
+def get_arm_angles_transformed(angles):
+    result = {}
+    for i in range(0, len(angles)):
+        result[arm_angle_mappings[i]['name']] = arm_angle_mappings[i]['sign']*angles[i]
     return result
 
 
-def reset_arms(darwin):
+def reset_arms_fight(darwin):
     darwin.set_angles_slow({
         'j_high_arm_r': math.pi/2,
         'j_low_arm_r': math.pi/3,
@@ -145,6 +166,17 @@ def reset_arms(darwin):
         'j_shoulder_l': 0,
     }, 2)
 
+def reset_arms(darwin):
+    angles = { 
+        'j_high_arm_r': 0 + math.pi/4,      # max: 17p/36=85    | min: -p/2 | zero: p/4 | up
+        'j_low_arm_r': 0 - math.pi/2,       # max: 31p/36=155   | min: 0    | zero: p/2 | bend
+        'j_shoulder_r': 0,                  # max: p            | min: -p   | zero: 0   | up
+        'j_high_arm_l': (-1)*0 - math.pi/4, # max: 17p/36=85    | min: -p/2 | zero: 0   | up
+        'j_low_arm_l': (-1)*0 + math.pi/2,  # max: 31p/36=155   | min: 0    | zero: p/2 | bend
+        'j_shoulder_l': (-1)*0              # max: p            | min: -p   | zero: 0   | up
+    }
+    darwin.set_angles_slow(angles, 1);
+
 
 def loop_walk(darwin, input_angles):
     rate = rospy.Rate(350)
@@ -152,7 +184,7 @@ def loop_walk(darwin, input_angles):
     while rospy.is_shutdown() != 1:
         if i > 2000:
             i = 1500
-        darwin.set_angles(get_angles_transformed(input_angles[i, :]))
+        darwin.set_angles(get_leg_angles_transformed(input_angles[i, :]))
         i += 1
         rate.sleep()
 
@@ -160,18 +192,18 @@ def loop_walk(darwin, input_angles):
 def initialize():
     rospy.init_node('darwin_file_walker', anonymous=True)
     darwin = Darwin()
-    darwin.set_angles_slow(get_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 1)
-    time.sleep(2)
+    # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
+    # time.sleep(2)
     # reset()
-    # reset_arms(darwin)
+    reset_arms(darwin)
 
-    angle_array = np.load('ad.npy')
-    rospy.loginfo("\n======\narray:\n")
-    rospy.loginfo(angle_array)
-    rospy.loginfo("======\n")
+    # angle_array = np.load('ad.npy')
+    # rospy.loginfo("\n======\narray:\n")
+    # rospy.loginfo(angle_array)
+    # rospy.loginfo("======\n")
     # rospy.loginfo('Setting the initital position')
-    darwin.set_angles_slow(get_angles_transformed(angle_array), 1)
-    time.sleep(4)
+    # darwin.set_angles_slow(get_leg_angles_transformed(angle_array), 1)
+    # time.sleep(4)
     rospy.loginfo('Start walking')
     # loop_walk(darwin, angle_array)
 
