@@ -38,13 +38,6 @@ class Darwin:
         
         self._pub_cmd_vel = rospy.Publisher(ns+"cmd_vel", Twist)
 
-    def set_walk_velocity(self, x, y, t):
-        msg = Twist()
-        msg.linear.x = x
-        msg.linear.y = y
-        msg.angular.z = t
-        self._pub_cmd_vel.publish(msg)
-        
     def _cb_joints(self, msg):
         if self.joints is None:
             self.joints = msg.name
@@ -148,68 +141,85 @@ def get_leg_angles_transformed(angles):
 
 def get_arm_angles_transformed(angles):
     result = {}
-    result['j_high_arm_r'] = angles['j_high_arm_r'] + math.pi/4
-    result['j_low_arm_r'] = angles['j_low_arm_r'] - math.pi/2
-    result['j_shoulder_r'] = angles['j_shoulder_r']
+    result['j_high_arm_r'] = angles['j_high_arm_r'] + math.pi/4         # max: 17p/36=85    | min: -p/2 | zero: p/4 | up
+    result['j_low_arm_r'] = angles['j_low_arm_r'] - math.pi/2           # max: 31p/36=155   | min: 0    | zero: p/2 | bend
+    result['j_shoulder_r'] = angles['j_shoulder_r']                     # max: p            | min: -p   | zero: 0   | up
     result['j_high_arm_l'] = angles['j_high_arm_l']*(-1) - math.pi/4
     result['j_low_arm_l'] = angles['j_low_arm_l']*(-1) + math.pi/2
     result['j_shoulder_l'] = angles['j_shoulder_l']*(-1)
     return result
 
 
-def reset_arms_fight(darwin):
-    darwin.set_angles_slow({
-        'j_high_arm_r': math.pi/2,
-        'j_low_arm_r': math.pi/3,
-        'j_shoulder_r': 0,
-        'j_high_arm_l': math.pi/2,
-        'j_low_arm_l': -math.pi/3,
-        'j_shoulder_l': 0,
-    }, 2)
-
-
-def set_arms_to_zero_without_transform(darwin):
+def set_arms_to_zero(darwin):
     angles = { 
-        'j_high_arm_r': 0 + math.pi/4,      # max: 17p/36=85    | min: -p/2 | zero: p/4 | up
-        'j_low_arm_r': 0 - math.pi/2,       # max: 31p/36=155   | min: 0    | zero: p/2 | bend
-        'j_shoulder_r': 0,                  # max: p            | min: -p   | zero: 0   | up
-        'j_high_arm_l': (-1)*0 - math.pi/4, # max: 17p/36=85    | min: -p/2 | zero: 0   | up
-        'j_low_arm_l': (-1)*0 + math.pi/2,  # max: 31p/36=155   | min: 0    | zero: p/2 | bend
-        'j_shoulder_l': (-1)*0              # max: p            | min: -p   | zero: 0   | up
+        'j_high_arm_r': 0,  # max: +p/2.1           | min: -p/2.2
+        'j_low_arm_r': 0,   # max: 29p/36=145deg    | min: 0
+        'j_shoulder_r': 0,  # max: +p               | min: -p/2
+        'j_high_arm_l': 0,  # max: p/2.1            | min: -p/2.2
+        'j_low_arm_l': 0,   # max: 29p/36=145deg    | min: 0
+        'j_shoulder_l': 0   # max: p/2.1            | min: -p/2.2
     }
-    darwin.set_angles_slow(angles, 1);
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
 
 
 def reset_arms(darwin):
     angles = { 
-        'j_high_arm_r': 0 - math.pi/2.2,  # max: +p/2.1  | min: -p/2.2
-        'j_low_arm_r': 0 + math.pi/4,
-        'j_shoulder_r': 0 + math.pi,    # max: +p | min: -p/2:
-        'j_high_arm_l': 0,   # max: +p/2.1 | min: -p/2.2
-        'j_low_arm_l': 0,
-        'j_shoulder_l': 0
+        'j_high_arm_r': -math.pi/2.6,
+        'j_low_arm_r': 2*math.pi/3,
+        'j_shoulder_r': -11*math.pi/36,
+        'j_high_arm_l': -math.pi/2.6,
+        'j_low_arm_l': 2*math.pi/3,   # p/2 + p/6
+        'j_shoulder_l': -11*math.pi/36 # -p/4 - p/18
     }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1); 
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
 
-def reset_pose_arms(darwin):
+def reset_legs_right(darwin):
+    angles = [ 
+       9.516219606e-12,     # 'j_pelvis_l': 0,
+       2.960183487e+01,     # 'j_thigh2_l': 0,
+       -6.844553674e-12,    # 'j_thigh1_l': 0,
+       -7.931234095e+01,    # 'j_tibia_l': 0,
+       4.971050607e+01,     # 'j_ankle1_l': 0,
+       2.468110432e-12,     # 'j_ankle2_l': 0,
+       2.407043782e-11,     # 'j_pelvis_r': 0,
+       4.971050607e+01,     # 'j_thigh2_r': 0,
+       -1.999932783e-11,    # 'j_thigh1_r': 0,
+       -7.931234095e+01,    # 'j_tibia_r': 0,
+       2.960183487e+01,     # 'j_ankle1_r': 0,
+       2.518999307e-12      # 'j_ankle2_r': 0 
+        
+        
+    ]
+    darwin.set_angles_slow(get_leg_angles_transformed(angles), 3)
+
+
+def hit_side_with_both_arms(darwin):
     angles = { 
-        'j_high_arm_r': -math.pi/3-math.pi/9,
-        'j_low_arm_r': math.pi/2+math.pi/4+math.pi/9,
-        'j_shoulder_r': math.pi/6,
-        'j_high_arm_l': -math.pi/3-math.pi/9,
-        'j_low_arm_l': math.pi/2+math.pi/9,
-        'j_shoulder_l': math.pi/6+math.pi/9
+        'j_high_arm_r': -math.pi/3.5,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': math.pi/2,
+        'j_high_arm_l': -math.pi/3.5,
+        'j_low_arm_l': 0,
+        'j_shoulder_l': math.pi/2
     }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1); 
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
+    reset_arms(darwin)
+
 
 def initialize():
     rospy.init_node('darwin_figher', anonymous=True)
     darwin = Darwin()
-    # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
-    # time.sleep(2)
-    # reset()
 
-    reset_arms(darwin)
+    darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
+    # time.sleep(2)
+    # reset() 
+
+    # angles = np.load('angles_darwin_1.npy')
+    # rospy.loginfo(angles)
+    # np.savetxt('angles_darwin_txt.txt', angles)
+    reset_legs_right(darwin) 
+
+    # hit_side_with_both_arms(darwin) 
 
     # rospy.loginfo('Setting the initital position')
     # time.sleep(4)
