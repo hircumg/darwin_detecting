@@ -176,13 +176,13 @@ def reset_arms(darwin):
 def reset_legs_right(darwin):
     angles = [ 
        9.516219606e-12,     # 'j_pelvis_l': 0,
-       2.960183487e+01,     # 'j_thigh2_l': 0,
+       3.99624770745e+01,     # 'j_thigh2_l': 0, 2.960183487e+01 * 1.35
        -6.844553674e-12,    # 'j_thigh1_l': 0,
        -7.931234095e+01,    # 'j_tibia_l': 0,
        4.971050607e+01,     # 'j_ankle1_l': 0,
        2.468110432e-12,     # 'j_ankle2_l': 0,
        2.407043782e-11,     # 'j_pelvis_r': 0,
-       4.971050607e+01,     # 'j_thigh2_r': 0,
+       6.71091831945e+01,     # 'j_thigh2_r': 0, 4.971050607e+01 * 1.35
        -1.999932783e-11,    # 'j_thigh1_r': 0,
        -7.931234095e+01,    # 'j_tibia_r': 0,
        2.960183487e+01,     # 'j_ankle1_r': 0,
@@ -219,7 +219,7 @@ def initialize():
     # np.savetxt('angles_darwin_txt.txt', angles)
     reset_legs_right(darwin) 
 
-    # hit_side_with_both_arms(darwin) 
+    hit_side_with_both_arms(darwin) 
 
     # rospy.loginfo('Setting the initital position')
     # time.sleep(4)
