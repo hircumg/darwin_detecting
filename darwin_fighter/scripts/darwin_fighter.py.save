@@ -2,9 +2,11 @@
 
 import rospy
 import math
+# from darwinvheight.darwin import Darwin
 from geometry_msgs.msg import Twist
 
 import dynamic_reconfigure.client
+# from gazebo_msgs.msg import LinkStates
 from std_msgs.msg import Float64
 import std_srvs.srv
 import numpy as np
@@ -12,7 +14,6 @@ from sensor_msgs.msg import JointState
 import time
 
 
-class Darwin:
 
     def __init__(self, ns="/robotis_op/"):
         self.ns = ns
@@ -168,7 +169,7 @@ def reset_arms_fight(darwin):
     }, 2)
 
 
-def set_arms_to_zero_without_transform(darwin):
+def set_arms(darwin):
     angles = { 
         'j_high_arm_r': 0 + math.pi/4,      # max: 17p/36=85    | min: -p/2 | zero: p/4 | up
         'j_low_arm_r': 0 - math.pi/2,       # max: 31p/36=155   | min: 0    | zero: p/2 | bend
@@ -182,37 +183,44 @@ def set_arms_to_zero_without_transform(darwin):
 
 def reset_arms(darwin):
     angles = { 
-        'j_high_arm_r': 0 - math.pi/2.2,  # max: +p/2.1  | min: -p/2.2
-        'j_low_arm_r': 0 + math.pi/4,
-        'j_shoulder_r': 0 + math.pi,    # max: +p | min: -p/2:
-        'j_high_arm_l': 0,   # max: +p/2.1 | min: -p/2.2
+        'j_high_arm_r': 0,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': 0,
+        'j_high_arm_l': 0,
         'j_low_arm_l': 0,
         'j_shoulder_l': 0
     }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1); 
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1);
 
-def reset_pose_arms(darwin):
-    angles = { 
-        'j_high_arm_r': -math.pi/3-math.pi/9,
-        'j_low_arm_r': math.pi/2+math.pi/4+math.pi/9,
-        'j_shoulder_r': math.pi/6,
-        'j_high_arm_l': -math.pi/3-math.pi/9,
-        'j_low_arm_l': math.pi/2+math.pi/9,
-        'j_shoulder_l': math.pi/6+math.pi/9
-    }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1); 
+
+def loop_walk(darwin, input_angles):
+    rate = rospy.Rate(350)
+    i = 0
+    while rospy.is_shutdown() != 1:
+        if i > 2000:
+            i = 1500
+        darwin.set_angles(get_leg_angles_transformed(input_angles[i, :]))
+        i += 1
+        rate.sleep()
+
 
 def initialize():
-    rospy.init_node('darwin_figher', anonymous=True)
+    rospy.init_node('darwin_file_walker', anonymous=True)
     darwin = Darwin()
-    # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
+    darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
     # time.sleep(2)
     # reset()
-
     reset_arms(darwin)
 
+    # angle_array = np.load('ad.npy')
+    # rospy.loginfo("\n======\narray:\n")
+    # rospy.loginfo(angle_array)
+    # rospy.loginfo("======\n")
     # rospy.loginfo('Setting the initital position')
+    # darwin.set_angles_slow(get_leg_angles_transformed(angle_array), 1)
     # time.sleep(4)
+    rospy.loginfo('Start walking')
+    # loop_walk(darwin, angle_array)
 
 if __name__ == '__main__':
     try:
