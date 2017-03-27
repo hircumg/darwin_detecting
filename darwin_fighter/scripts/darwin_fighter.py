@@ -190,19 +190,37 @@ def reset_legs_right(darwin):
         
         
     ]
-    darwin.set_angles_slow(get_leg_angles_transformed(angles), 3)
+    darwin.set_angles_slow(get_leg_angles_transformed(angles), 1.5)
 
 
 def hit_side_with_both_arms(darwin):
     angles = { 
-        'j_high_arm_r': -math.pi/3.5,
+        'j_high_arm_r': -math.pi/6,
         'j_low_arm_r': 0,
-        'j_shoulder_r': math.pi/2,
-        'j_high_arm_l': -math.pi/3.5,
+        'j_shoulder_r': math.pi/1.6,
+        'j_high_arm_l': -math.pi/6,
         'j_low_arm_l': 0,
-        'j_shoulder_l': math.pi/2
+        'j_shoulder_l': math.pi/1.6
     }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    angles = { 
+        'j_high_arm_r': -math.pi/1.7,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': math.pi/1.6,
+        'j_high_arm_l': -math.pi/1.7,
+        'j_low_arm_l': 0,
+        'j_shoulder_l': math.pi/1.6
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    angles = { 
+        'j_high_arm_r': -math.pi/4,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': math.pi/1.6,
+        'j_high_arm_l': -math.pi/4,
+        'j_low_arm_l': 0,
+        'j_shoulder_l': math.pi/1.6
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
     reset_arms(darwin)
 
 
@@ -210,7 +228,7 @@ def initialize():
     rospy.init_node('darwin_figher', anonymous=True)
     darwin = Darwin()
 
-    darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
+    # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
     # time.sleep(2)
     # reset() 
 
