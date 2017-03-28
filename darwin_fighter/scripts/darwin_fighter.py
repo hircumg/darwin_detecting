@@ -150,7 +150,7 @@ def get_arm_angles_transformed(angles):
     return result
 
 
-def set_arms_to_zero(darwin):
+def reset_arms(darwin):
     angles = { 
         'j_high_arm_r': 0,  # max: +p/2.1           | min: -p/2.2
         'j_low_arm_r': 0,   # max: 29p/36=145deg    | min: 0
@@ -162,7 +162,7 @@ def set_arms_to_zero(darwin):
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
 
 
-def hit_side_with_both_arms(darwin):
+def squeeze(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/6,
         'j_low_arm_r': 0,
@@ -190,10 +190,10 @@ def hit_side_with_both_arms(darwin):
         'j_shoulder_l': math.pi/1.6
     }
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
-    reset_arms(darwin)
+    reset_arms_fight(darwin)
 
 
-def push_with_both_arms(darwin):
+def push(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/1.7,
         'j_low_arm_r': 0,
@@ -203,10 +203,10 @@ def push_with_both_arms(darwin):
         'j_shoulder_l': math.pi/1.5
     }
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
-    reset_arms(darwin)
+    reset_arms_fight(darwin)
 
 
-def hit_straight_right(darwin): 
+def straight_right(darwin): 
     angles = { 
         'j_high_arm_r': -math.pi/1.8,
         'j_low_arm_r': 0,
@@ -216,10 +216,10 @@ def hit_straight_right(darwin):
         'j_shoulder_l': -13*math.pi/36
     }
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
-    reset_arms(darwin)
+    reset_arms_fight(darwin)
 
 
-def hit_straight_left(darwin): 
+def straight_left(darwin): 
     angles = { 
         'j_high_arm_r': -math.pi/2.6,
         'j_low_arm_r': 2*math.pi/4,
@@ -229,10 +229,10 @@ def hit_straight_left(darwin):
         'j_shoulder_l': math.pi*0.9
     }
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
-    reset_arms(darwin)
+    reset_arms_fight(darwin)
 
 
-def reset_arms(darwin):
+def reset_arms_fight(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/2.6,
         'j_low_arm_r': 2*math.pi/3,
@@ -244,7 +244,7 @@ def reset_arms(darwin):
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
 
 
-def reset_legs_right(darwin):
+def reset_legs_fight(darwin):
     angles = [ 
        9.516219606e-12,     # 'j_pelvis_l': 0,
        3.99624770745e+01,     # 'j_thigh2_l': 0, 2.960183487e+01 * 1.35
@@ -275,7 +275,29 @@ def initialize():
     # np.savetxt('angles_darwin_txt.txt', angles)
     # reset_legs_right(darwin) 
 
-    push_with_both_arms(darwin) 
+    while True:
+        rospy.loginfo("""
+            Straight left: a
+            Straight right: o
+            Squeeze: '
+            Push: ,
+            Exit: z
+        """)
+        inp = raw_input()        
+        if inp == 'a':
+            straight_left(darwin)
+        elif inp == 'o':
+            straight_right(darwin)
+        elif inp == '\'':
+            squeeze(darwin)
+        elif inp == ',':
+            push(darwin)
+        elif inp == 'z':
+            rospy.loginfo("Bye!")
+            break
+        else:
+            rospy.loginfo("No such command")
+
 
     # rospy.loginfo('Setting the initital position')
     # time.sleep(4)
