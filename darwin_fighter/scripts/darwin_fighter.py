@@ -180,7 +180,7 @@ def squeeze(darwin):
         'j_low_arm_l': 0,
         'j_shoulder_l': math.pi/1.6
     }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.4)
     angles = { 
         'j_high_arm_r': -math.pi/4,
         'j_low_arm_r': 0,
@@ -232,6 +232,20 @@ def straight_left(darwin):
     reset_arms_fight(darwin)
 
 
+def block(darwin): 
+    angles = { 
+        'j_high_arm_r': -math.pi/2,
+        'j_low_arm_r': 2*math.pi/3,
+        'j_shoulder_r': math.pi/2,
+        'j_high_arm_l': -math.pi/2,
+        'j_low_arm_l': 2*math.pi/3,
+        'j_shoulder_l': math.pi/2
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    time.sleep(0.5)
+    reset_arms_fight(darwin)
+
+
 def reset_arms_fight(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/2.6,
@@ -273,7 +287,8 @@ def initialize():
     # angles = np.load('angles_darwin_1.npy')
     # rospy.loginfo(angles)
     # np.savetxt('angles_darwin_txt.txt', angles)
-    # reset_legs_right(darwin) 
+    reset_legs_fight(darwin) 
+    reset_arms_fight(darwin)
 
     while True:
         rospy.loginfo("""
@@ -281,6 +296,7 @@ def initialize():
             Straight right: o
             Squeeze: '
             Push: ,
+            Block: .
             Exit: z
         """)
         inp = raw_input()        
@@ -292,6 +308,8 @@ def initialize():
             squeeze(darwin)
         elif inp == ',':
             push(darwin)
+        elif inp == '.':
+            block(darwin)
         elif inp == 'z':
             rospy.loginfo("Bye!")
             break
