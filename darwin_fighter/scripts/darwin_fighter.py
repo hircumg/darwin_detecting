@@ -162,37 +162,6 @@ def set_arms_to_zero(darwin):
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
 
 
-def reset_arms(darwin):
-    angles = { 
-        'j_high_arm_r': -math.pi/2.6,
-        'j_low_arm_r': 2*math.pi/3,
-        'j_shoulder_r': -11*math.pi/36,
-        'j_high_arm_l': -math.pi/2.6,
-        'j_low_arm_l': 2*math.pi/3,   # p/2 + p/6
-        'j_shoulder_l': -11*math.pi/36 # -p/4 - p/18
-    }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
-
-def reset_legs_right(darwin):
-    angles = [ 
-       9.516219606e-12,     # 'j_pelvis_l': 0,
-       3.99624770745e+01,     # 'j_thigh2_l': 0, 2.960183487e+01 * 1.35
-       -6.844553674e-12,    # 'j_thigh1_l': 0,
-       -7.931234095e+01,    # 'j_tibia_l': 0,
-       4.971050607e+01,     # 'j_ankle1_l': 0,
-       2.468110432e-12,     # 'j_ankle2_l': 0,
-       2.407043782e-11,     # 'j_pelvis_r': 0,
-       6.71091831945e+01,     # 'j_thigh2_r': 0, 4.971050607e+01 * 1.35
-       -1.999932783e-11,    # 'j_thigh1_r': 0,
-       -7.931234095e+01,    # 'j_tibia_r': 0,
-       2.960183487e+01,     # 'j_ankle1_r': 0,
-       2.518999307e-12      # 'j_ankle2_r': 0 
-        
-        
-    ]
-    darwin.set_angles_slow(get_leg_angles_transformed(angles), 1.5)
-
-
 def hit_side_with_both_arms(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/6,
@@ -224,6 +193,75 @@ def hit_side_with_both_arms(darwin):
     reset_arms(darwin)
 
 
+def push_with_both_arms(darwin):
+    angles = { 
+        'j_high_arm_r': -math.pi/1.7,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': math.pi/1.5,
+        'j_high_arm_l': -math.pi/1.7,
+        'j_low_arm_l': 0,
+        'j_shoulder_l': math.pi/1.5
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    reset_arms(darwin)
+
+
+def hit_straight_right(darwin): 
+    angles = { 
+        'j_high_arm_r': -math.pi/1.8,
+        'j_low_arm_r': 0,
+        'j_shoulder_r': math.pi*0.9,
+        'j_high_arm_l': -math.pi/2.6,
+        'j_low_arm_l': 2*math.pi/4,
+        'j_shoulder_l': -13*math.pi/36
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    reset_arms(darwin)
+
+
+def hit_straight_left(darwin): 
+    angles = { 
+        'j_high_arm_r': -math.pi/2.6,
+        'j_low_arm_r': 2*math.pi/4,
+        'j_shoulder_r': -13*math.pi/36,
+        'j_high_arm_l': -math.pi/1.8,
+        'j_low_arm_l': 0,
+        'j_shoulder_l': math.pi*0.9
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    reset_arms(darwin)
+
+
+def reset_arms(darwin):
+    angles = { 
+        'j_high_arm_r': -math.pi/2.6,
+        'j_low_arm_r': 2*math.pi/3,
+        'j_shoulder_r': -11*math.pi/36,
+        'j_high_arm_l': -math.pi/2.6,
+        'j_low_arm_l': 2*math.pi/3,   # p/2 + p/6
+        'j_shoulder_l': -11*math.pi/36 # -p/4 - p/18
+    }
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+
+
+def reset_legs_right(darwin):
+    angles = [ 
+       9.516219606e-12,     # 'j_pelvis_l': 0,
+       3.99624770745e+01,     # 'j_thigh2_l': 0, 2.960183487e+01 * 1.35
+       -6.844553674e-12,    # 'j_thigh1_l': 0,
+       -7.931234095e+01,    # 'j_tibia_l': 0,
+       4.971050607e+01,     # 'j_ankle1_l': 0,
+       2.468110432e-12,     # 'j_ankle2_l': 0,
+       2.407043782e-11,     # 'j_pelvis_r': 0,
+       6.71091831945e+01,     # 'j_thigh2_r': 0, 4.971050607e+01 * 1.35
+       -1.999932783e-11,    # 'j_thigh1_r': 0,
+       -7.931234095e+01,    # 'j_tibia_r': 0,
+       2.960183487e+01,     # 'j_ankle1_r': 0,
+       2.518999307e-12      # 'j_ankle2_r': 0 
+    ]
+    darwin.set_angles_slow(get_leg_angles_transformed(angles), 1.5) 
+
+
 def initialize():
     rospy.init_node('darwin_figher', anonymous=True)
     darwin = Darwin()
@@ -235,9 +273,9 @@ def initialize():
     # angles = np.load('angles_darwin_1.npy')
     # rospy.loginfo(angles)
     # np.savetxt('angles_darwin_txt.txt', angles)
-    reset_legs_right(darwin) 
+    # reset_legs_right(darwin) 
 
-    hit_side_with_both_arms(darwin) 
+    push_with_both_arms(darwin) 
 
     # rospy.loginfo('Setting the initital position')
     # time.sleep(4)
