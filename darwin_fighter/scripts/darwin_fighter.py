@@ -162,6 +162,31 @@ def reset_arms(darwin):
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 1)
 
 
+def get_arm_angles_dictionary(angles_list): 
+    angles = {
+        'j_high_arm_r': angles_list[0],
+        'j_low_arm_r': angles_list[1],
+        'j_shoulder_r': angles_list[2],
+        'j_high_arm_l': angles_list[3],
+        'j_low_arm_l': angles_list[4],
+        'j_shoulder_l': angles_list[5]
+    }
+    return angles
+
+
+def mirror_arm_angles(angles):
+    tmp_j_high_arm_r = angles['j_high_arm_r']
+    tmp_j_low_arm_r = angles['j_low_arm_r']
+    tmp_j_shoulder_r = angles['j_shoulder_r']
+    angles['j_high_arm_r'] = angles['j_high_arm_l']
+    angles['j_low_arm_r'] = angles['j_low_arm_l']
+    angles['j_shoulder_r'] = angles['j_shoulder_l']
+    angles['j_high_arm_l'] = tmp_j_high_arm_r
+    angles['j_low_arm_l'] = tmp_j_low_arm_r
+    angles['j_shoulder_l'] = tmp_j_shoulder_r
+    return angles
+
+
 def squeeze(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/6,
@@ -193,56 +218,75 @@ def squeeze(darwin):
     reset_arms_fight(darwin)
 
 
-def push(darwin):
+def strike(darwin):
     angles = { 
         'j_high_arm_r': -math.pi/1.7,
-        'j_low_arm_r': 0,
+        'j_low_arm_r': math.pi/6,
         'j_shoulder_r': math.pi/1.5,
         'j_high_arm_l': -math.pi/1.7,
-        'j_low_arm_l': 0,
+        'j_low_arm_l': math.pi/6,
         'j_shoulder_l': math.pi/1.5
     }
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
     reset_arms_fight(darwin)
 
 
-def straight_right(darwin): 
-    angles = { 
-        'j_high_arm_r': -math.pi/1.8,
-        'j_low_arm_r': 0,
-        'j_shoulder_r': math.pi*0.9,
-        'j_high_arm_l': -math.pi/2.6,
-        'j_low_arm_l': 2*math.pi/4,
-        'j_shoulder_l': -13*math.pi/36
-    }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+
+def uppercut_right_angles(): 
+    angles = get_arm_angles_dictionary([
+        -math.pi/1.8,       0,              math.pi*0.9,
+        -math.pi/2.6,   2*math.pi/4,    -13*math.pi/36
+    ])
+    return angles
+
+def uppercut_right(darwin): 
+    darwin.set_angles_slow(get_arm_angles_transformed(uppercut_right_angles()), 0.5)
+    reset_arms_fight(darwin) 
+
+def uppercut_left(darwin): 
+    mirrored_angles = mirror_arm_angles(uppercut_right_angles())
+    darwin.set_angles_slow(get_arm_angles_transformed(mirrored_angles), 0.5)
     reset_arms_fight(darwin)
 
-
-def straight_left(darwin): 
-    angles = { 
-        'j_high_arm_r': -math.pi/2.6,
-        'j_low_arm_r': 2*math.pi/4,
-        'j_shoulder_r': -13*math.pi/36,
-        'j_high_arm_l': -math.pi/1.8,
-        'j_low_arm_l': 0,
-        'j_shoulder_l': math.pi*0.9
-    }
-    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
-    reset_arms_fight(darwin)
 
 
 def block(darwin): 
-    angles = { 
-        'j_high_arm_r': -math.pi/2,
-        'j_low_arm_r': 2*math.pi/3,
-        'j_shoulder_r': math.pi/2,
-        'j_high_arm_l': -math.pi/2,
-        'j_low_arm_l': 2*math.pi/3,
-        'j_shoulder_l': math.pi/2
-    }
+    angles = get_arm_angles_dictionary([
+        -math.pi/2, 2*math.pi/3,    math.pi/2,
+        -math.pi/2, 2*math.pi/3,    math.pi/2
+    ])
     darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
     time.sleep(0.5)
+    reset_arms_fight(darwin)
+
+
+
+def straight_right_angles():
+    angles = []
+    angles.append(get_arm_angles_dictionary([
+        -math.pi/2, 17*math.pi/20,  math.pi/4,
+        -math.pi/2, 2*math.pi/3,    math.pi/6
+    ]))
+    angles.append(get_arm_angles_dictionary([
+        -math.pi/1.8,   0,              math.pi/2,
+        -math.pi/2.6,   2*math.pi/4,    -math.pi/4
+    ]))
+    return angles
+
+def straight_right(darwin): 
+    angles_list = straight_right_angles()
+    angles = angles_list[0]
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.5)
+    angles = angles_list[1]
+    darwin.set_angles_slow(get_arm_angles_transformed(angles), 0.35)
+    reset_arms_fight(darwin) 
+
+def straight_left(darwin): 
+    angles_list = straight_right_angles()
+    mirrored_angles = mirror_arm_angles(angles_list[0])
+    darwin.set_angles_slow(get_arm_angles_transformed(mirrored_angles), 0.5)
+    mirrored_angles = mirror_arm_angles(angles_list[1])
+    darwin.set_angles_slow(get_arm_angles_transformed(mirrored_angles), 0.35)
     reset_arms_fight(darwin)
 
 
@@ -292,22 +336,28 @@ def initialize():
 
     while True:
         rospy.loginfo("""
-            Straight left: a
-            Straight right: o
+            Uppercut left: a
+            Uppercut right: o
+            Straight left: e
+            Straight right: u
             Squeeze: '
-            Push: ,
+            Strike: ,
             Block: .
             Exit: z
         """)
         inp = raw_input()        
         if inp == 'a':
-            straight_left(darwin)
+            uppercut_left(darwin)
         elif inp == 'o':
+            uppercut_right(darwin)
+        if inp == 'e':
+            straight_left(darwin)
+        elif inp == 'u':
             straight_right(darwin)
         elif inp == '\'':
             squeeze(darwin)
         elif inp == ',':
-            push(darwin)
+            strike(darwin)
         elif inp == '.':
             block(darwin)
         elif inp == 'z':
