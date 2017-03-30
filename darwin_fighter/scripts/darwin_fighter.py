@@ -10,6 +10,10 @@ import std_srvs.srv
 import numpy as np
 from sensor_msgs.msg import JointState
 import time
+from subprocess import call
+from subprocess import Popen, PIPE
+import threading
+import time
 
 
 class Darwin:
@@ -340,6 +344,11 @@ def reset_legs_fight(darwin):
 
 
 def initialize():
+
+    teleop_thread = TeleopThread(0, "TELEOP_THREAD")
+    teleop_thread.start()
+    # teleop_thread.join()
+
     rospy.init_node('darwin_figher', anonymous=True)
     darwin = Darwin()
 
@@ -394,12 +403,40 @@ def initialize():
         elif inp == 'z':
             rospy.loginfo("Bye!")
             break
+
+        elif inp == '11':
+            call(["mpg321", "/home/robotis/Music/WhatNowDarwin.mp3"])
+
+        elif inp == '12':
+            teleop_thread.cmd("DO IT")
+            # process = Popen(["roslaunch", "robotis_op_teleop", "robotis_op_teleop_keyboard.launch"], stdout=PIPE)   
+            # (output, err) = process.communicate()
+            # exit_code = process.wait()
+
         else:
             rospy.loginfo("No such command")
 
 
     # rospy.loginfo('Setting the initital position')
     # time.sleep(4)
+
+class TeleopThread (threading.Thread):
+    def __init__(self, threadID, name):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name 
+        self.cmd = "COMMAND"
+    def run(self):
+        rospy.loginfo("Running")
+        while True:
+            if self.cmd != "":
+                rospy.loginfo("A new command %s"%(self.cmd))
+                # self.cmd = "" 
+            time.sleep(1)
+    def cmd(self, command):
+        if self.cmd == "":
+            self.cmd = command
+        
 
 if __name__ == '__main__':
     try:
