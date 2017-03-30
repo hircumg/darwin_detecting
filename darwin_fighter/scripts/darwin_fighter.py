@@ -10,11 +10,10 @@ import std_srvs.srv
 import numpy as np
 from sensor_msgs.msg import JointState
 import time
-from subprocess import call
-from subprocess import Popen, PIPE
+from subprocess import call, Popen, PIPE
 import threading
 import time
-
+import fcntl
 
 class Darwin:
 
@@ -340,15 +339,11 @@ def reset_legs_fight(darwin):
        2.960183487e+01,     # 'j_ankle1_r': 0,
        2.518999307e-12      # 'j_ankle2_r': 0 
     ]
-    darwin.set_angles_slow(get_leg_angles_transformed(angles), 1.5) 
+    darwin.set_angles_slow(get_leg_angles_transformed(angles), 1) 
 
 
 def initialize():
-
-    teleop_thread = TeleopThread(0, "TELEOP_THREAD")
-    teleop_thread.start()
-    # teleop_thread.join()
-
+    
     rospy.init_node('darwin_figher', anonymous=True)
     darwin = Darwin()
 
@@ -375,6 +370,10 @@ def initialize():
             Squeeze: '
             Strike: ,
             Block: .
+            Kick left: 1
+            Kick right: 2 
+            Get up from forward fall: 3
+            Get up from backward fall: 4
             Exit: z
         """)
         inp = raw_input()        
@@ -407,37 +406,18 @@ def initialize():
         elif inp == '11':
             call(["mpg321", "/home/robotis/Music/WhatNowDarwin.mp3"])
 
-        elif inp == '12':
-            teleop_thread.cmd("DO IT")
-            # process = Popen(["roslaunch", "robotis_op_teleop", "robotis_op_teleop_keyboard.launch"], stdout=PIPE)   
-            # (output, err) = process.communicate()
-            # exit_code = process.wait()
+        elif inp == '1':
+            p = Popen(["rostopic", "pub", "/robotis_op/start_action", "std_msgs/Int32", "13"])
+            time.sleep(3)
+            reset_legs_fight(darwin)
 
         else:
-            rospy.loginfo("No such command")
+            rospy.loginfo("No such command") 
 
 
     # rospy.loginfo('Setting the initital position')
     # time.sleep(4)
-
-class TeleopThread (threading.Thread):
-    def __init__(self, threadID, name):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name 
-        self.cmd = "COMMAND"
-    def run(self):
-        rospy.loginfo("Running")
-        while True:
-            if self.cmd != "":
-                rospy.loginfo("A new command %s"%(self.cmd))
-                # self.cmd = "" 
-            time.sleep(1)
-    def cmd(self, command):
-        if self.cmd == "":
-            self.cmd = command
         
-
 if __name__ == '__main__':
     try:
         initialize()
