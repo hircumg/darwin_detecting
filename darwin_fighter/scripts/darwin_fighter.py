@@ -13,7 +13,6 @@ import std_srvs.srv
 from sensor_msgs.msg import JointState
 import time
 from subprocess import call
-import time
 
 class Darwin:
 
@@ -456,7 +455,7 @@ def initialize():
                 darwin.enable_walking(False)
                 rospy.sleep(0.2) 
             hammer(darwin, hammer_right_angles())
-        if inp == 'j':
+        elif inp == 'j':
             if walking:
                 darwin.enable_walking(False)
                 rospy.sleep(0.2) 
