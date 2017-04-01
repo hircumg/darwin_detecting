@@ -371,6 +371,7 @@ def initialize():
 
     max_tv = darwin.max_speed
     max_rv = darwin.max_turn
+    walking = False
     dirty = False
 
     speed = 0
@@ -426,30 +427,63 @@ def initialize():
         """)
         inp = raw_input()        
         if inp == 'a':
-            darwin.enable_walking(False)
-            rospy.sleep(0.2)
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             uppercut(darwin, mirror_arm_angles(uppercut_right_angles()))
         elif inp == 'o':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             uppercut(darwin, uppercut_right_angles())
         if inp == 'e':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             straight(darwin, mirror_arm_angles(straight_right_angles()))
         elif inp == 'u':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             straight(darwin, straight_right_angles())
         if inp == ';':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             hammer(darwin, mirror_arm_angles(hammer_right_angles()))
         elif inp == 'q':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             hammer(darwin, hammer_right_angles())
         if inp == 'j':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             side(darwin, mirror_arm_angles(side_right_angles()))
         elif inp == 'k':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             side(darwin, side_right_angles())
         elif inp == '\'':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             squeeze(darwin)
         elif inp == ',':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             strike(darwin)
         elif inp == '.':
+            if walking:
+                darwin.enable_walking(False)
+                rospy.sleep(0.2) 
             block(darwin)
         elif inp == 'z':
+            if walking:
+                darwin.enable_walking(False)
             rospy.loginfo("Bye!")
             break
 
@@ -495,17 +529,23 @@ def initialize():
 
         elif inp == '1':    # kick left
             darwin.start_action(13) 
+            walking = False
         elif inp == '2':    # kick right
             darwin.start_action(12) 
+            walking = False
         elif inp == '3':    # get up forward
             darwin.start_action(10) 
+            walking = False
         elif inp == '4':    # get up backward
             darwin.start_action(11)
+            walking = False
 
         elif inp == '9':
             darwin.enable_walking(True) 
+            walking = True
         elif inp == '0':
             darwin.enable_walking(False)
+            walking = False
 
         elif inp == "b":    # +al
             max_tv += max_tv/10
