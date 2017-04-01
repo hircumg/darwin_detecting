@@ -6,14 +6,14 @@ from geometry_msgs.msg import Twist
 
 import dynamic_reconfigure.client
 from std_msgs.msg import Float64
+from std_msgs.msg import Bool
+from std_msgs.msg import Int32
 import std_srvs.srv
-import numpy as np
+# import numpy as np
 from sensor_msgs.msg import JointState
 import time
-from subprocess import call, Popen, PIPE
-import threading
+from subprocess import call
 import time
-import fcntl
 
 class Darwin:
 
@@ -21,6 +21,17 @@ class Darwin:
         self.ns = ns
         self.joints = None
         self.angles = None
+
+        self.twist = Twist()
+        self.twist.linear.x = 0
+        self.twist.linear.y = 0
+        self.twist.linear.z = 0
+        self.twist.angular.x = 0
+        self.twist.angular.y = 0
+        self.twist.angular.z = 0
+        
+        self.max_speed = 0.500
+        self.max_turn = 60.0*math.pi/180.0
         
         self._sub_joints = rospy.Subscriber(ns+"joint_states", JointState, self._cb_joints, queue_size=1)
         rospy.loginfo("Waiting for joints to be populated...")
@@ -35,11 +46,22 @@ class Darwin:
         self._pub_joints = {}
         for j in self.joints:
             p = rospy.Publisher(self.ns+j+"_position_controller/command", Float64)
-            self._pub_joints[j] = p
+            self._pub_joints[j] = p 
         
         rospy.sleep(1)
         
-        self._pub_cmd_vel = rospy.Publisher(ns+"cmd_vel", Twist)
+        self._pub_cmd_vel = rospy.Publisher(self.ns+"cmd_vel", Twist)
+        self._pub_enable_walking = rospy.Publisher(self.ns+"enable_walking", Bool)
+        self._pub_start_action = rospy.Publisher(self.ns+"start_action", Int32)
+
+    def enable_walking(self, msg):
+        self._pub_enable_walking.publish(msg)
+
+    def start_action(self, msg):
+        self._pub_start_action.publish(msg)
+
+    def cmd_vel(self, msg):
+        self._pub_cmd_vel.publish(msg)
 
     def _cb_joints(self, msg):
         if self.joints is None:
@@ -65,7 +87,7 @@ class Darwin:
             if j not in self.joints:
                 rospy.logerror("Invalid joint name "+j)
                 continue
-            self._pub_joints[j].publish(v)
+            self._pub_joints
 
     def set_angles_slow(self, stop_angles, delay=2):
         start_angles = self.get_angles()
@@ -342,10 +364,17 @@ def reset_legs_fight(darwin):
     darwin.set_angles_slow(get_leg_angles_transformed(angles), 1) 
 
 
-def initialize():
-    
+def initialize(): 
+
     rospy.init_node('darwin_figher', anonymous=True)
     darwin = Darwin()
+
+    max_tv = darwin.max_speed
+    max_rv = darwin.max_turn
+    dirty = False
+
+    speed = 0
+    turn = 0
 
     # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
     # time.sleep(2)
@@ -354,8 +383,6 @@ def initialize():
     # angles = np.load('angles_darwin_1.npy')
     # rospy.loginfo(angles)
     # np.savetxt('angles_darwin_txt.txt', angles)
-    reset_legs_fight(darwin) 
-    reset_arms_fight(darwin)
 
     while True:
         rospy.loginfo("""
@@ -370,14 +397,37 @@ def initialize():
             Squeeze: '
             Strike: ,
             Block: .
+
+            ^:  c
+            <:  h
+            |:  w
+            ^>: r
+            >:  n
+            <^: g
+            |>: v
+            <|: m
+            stop: t
+
             Kick left: 1
             Kick right: 2 
             Get up from forward fall: 3
             Get up from backward fall: 4
+
+            Increase ang and lin speed by 10%:  b
+            Decrease ang and lin speed by 10%:  x
+            Increase lin speed by 10%:  d
+            Decrease lin speed by 10%:  i
+            Increase ang speed by 10%:  f
+            Decrease ang speed by 10%:  y
+
+            Enable walking: 9
+            Disable walking: 0
             Exit: z
         """)
         inp = raw_input()        
         if inp == 'a':
+            darwin.enable_walking(False)
+            rospy.sleep(0.2)
             uppercut(darwin, mirror_arm_angles(uppercut_right_angles()))
         elif inp == 'o':
             uppercut(darwin, uppercut_right_angles())
@@ -404,20 +454,90 @@ def initialize():
             break
 
         elif inp == '11':
-            call(["mpg321", "/home/robotis/Music/WhatNowDarwin.mp3"])
+            call(["mpg321", "/home/robotis/Music/WhatNowDarwin.mp3"]) 
 
-        elif inp == '1':
-            p = Popen(["rostopic", "pub", "/robotis_op/start_action", "std_msgs/Int32", "13"])
-            time.sleep(3)
-            reset_legs_fight(darwin)
+        elif inp == "c":    # ^
+            darwin.speed = 1
+            darwin.turn = 0 
+            dirty = True
+        elif inp == "h":    # <
+            darwin.speed = 0
+            darwin.turn = 1 
+            dirty = True
+        elif inp == "w":    # |
+            darwin.speed = -1
+            darwin.turn = 0 
+            dirty = True
+        elif inp == "r":    # ^>
+            darwin.speed = 1
+            darwin.turn = -1 
+            dirty = True
+        elif inp == "n":    # >
+            darwin.speed = 0
+            darwin.turn = -1 
+            dirty = True
+        elif inp == "g":    # <^
+            darwin.speed = 1
+            darwin.turn = 1 
+            dirty = True
+        elif inp == "v":    # |>
+            darwin.speed = -1
+            darwin.turrn = -1 
+            dirty = True
+        elif inp == "m":    # <|
+            darwin.speed = -1
+            darwin.turn = 1 
+            dirty = True
+        elif inp == "t":    # stop
+            darwin.speed = 0
+            darwin.turn = 0
+            dirty = True
+
+        elif inp == '1':    # kick left
+            darwin.start_action(13) 
+        elif inp == '2':    # kick right
+            darwin.start_action(12) 
+        elif inp == '3':    # get up forward
+            darwin.start_action(10) 
+        elif inp == '4':    # get up backward
+            darwin.start_action(11)
+
+        elif inp == '9':
+            darwin.enable_walking(True) 
+        elif inp == '0':
+            darwin.enable_walking(False)
+
+        elif inp == "b":    # +al
+            max_tv += max_tv/10
+            max_rv += max_rv/10
+            dirty = True
+        elif inp == "x":    # -al
+            max_tv -= max_tv/10
+            max_rv -= max_rv/10
+            dirty = True
+        elif inp == "d":    # +l
+            max_tv += max_tv/10
+            dirty = True
+        elif inp == "i":    # -l
+            max_tv -= max_tv/10
+            dirty = True
+        elif inp == "f":    # +a
+            max_rv += max_rv/10
+            dirty = True
+        elif inp == "y":    # -a
+            max_rv -= max_rv/10
+            dirty = True
 
         else:
             rospy.loginfo("No such command") 
+    
+        if dirty:
+            darwin.twist.linear.x = darwin.speed * max_tv
+            darwin.twist.angular.z = darwin.turn * max_rv
+            darwin.cmd_vel(darwin.twist)
+            darwin.dirty = False
 
 
-    # rospy.loginfo('Setting the initital position')
-    # time.sleep(4)
-        
 if __name__ == '__main__':
     try:
         initialize()
