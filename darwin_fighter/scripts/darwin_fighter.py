@@ -8,11 +8,13 @@ import dynamic_reconfigure.client
 from std_msgs.msg import Float64
 from std_msgs.msg import Bool
 from std_msgs.msg import Int32
-import std_srvs.srv
-# import numpy as np
+
 from sensor_msgs.msg import JointState
+
+import std_srvs.srv
 import time
-from subprocess import call
+
+# from subprocess import call
 
 class Darwin:
 
@@ -31,6 +33,9 @@ class Darwin:
         
         self.max_speed = 0.500
         self.max_turn = 60.0*math.pi/180.0
+
+        self.speed = 0
+        self.turn = 0
         
         self._sub_joints = rospy.Subscriber(ns+"joint_states", JointState, self._cb_joints, queue_size=1)
         rospy.loginfo("Waiting for joints to be populated...")
@@ -145,11 +150,6 @@ arm_angle_mappings = [
     {'name': 'j_low_arm_l', 'sign': -1},
     {'name': 'j_shoulder_l', 'sign': -1}
 ]
-
-
-def reset():
-
-    reset_w()
 
 
 def get_leg_angles_transformed(angles):
@@ -335,7 +335,6 @@ def hammer(darwin, angles):
     reset_arms_fight(darwin) 
 
 
-
 def reset_arms_fight(darwin):
     angles = get_arm_angles_dictionary([
         -math.pi/2.6,   2*math.pi/3,    -11*math.pi/36, 
@@ -376,54 +375,11 @@ def initialize():
     speed = 0
     turn = 0
 
-    # darwin.set_angles_slow(get_leg_angles_transformed([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 2)
-    # time.sleep(2)
-    # reset() 
-
-    # angles = np.load('angles_darwin_1.npy')
-    # rospy.loginfo(angles)
-    # np.savetxt('angles_darwin_txt.txt', angles)
+    reset_legs_fight(darwin)
+    time.sleep(2) 
 
     while True:
-        rospy.loginfo("""
-            Uppercut left: a
-            Uppercut right: o
-            Straight left: e
-            Straight right: u
-            Hammer left: ;
-            Hammer right: q
-            Side left: j
-            Side right: k
-            Squeeze: '
-            Strike: ,
-            Block: .
-
-            ^:  c
-            <:  h
-            |:  w
-            ^>: r
-            >:  n
-            <^: g
-            |>: v
-            <|: m
-            stop: t
-
-            Kick left: 1
-            Kick right: 2 
-            Get up from forward fall: 3
-            Get up from backward fall: 4
-
-            Increase ang and lin speed by 10%:  b
-            Decrease ang and lin speed by 10%:  x
-            Increase lin speed by 10%:  d
-            Decrease lin speed by 10%:  i
-            Increase ang speed by 10%:  f
-            Decrease ang speed by 10%:  y
-
-            Enable walking: 9
-            Disable walking: 0
-            Exit: z
-        """)
+        rospy.loginfo("OK")
         inp = raw_input()        
         if inp == 'a':
             if walking:
@@ -484,10 +440,7 @@ def initialize():
             if walking:
                 darwin.enable_walking(False)
             rospy.loginfo("Bye!")
-            break
-
-        elif inp == '11':
-            call(["mpg321", "/home/robotis/Music/WhatNowDarwin.mp3"]) 
+            break 
 
         elif inp == "c":    # ^
             darwin.speed = 1
@@ -574,8 +527,7 @@ def initialize():
             darwin.twist.linear.x = darwin.speed * max_tv
             darwin.twist.angular.z = darwin.turn * max_rv
             darwin.cmd_vel(darwin.twist)
-            darwin.dirty = False
-
+            darwin.dirty = False 
 
 if __name__ == '__main__':
     try:
