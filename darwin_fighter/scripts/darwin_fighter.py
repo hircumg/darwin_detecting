@@ -375,8 +375,6 @@ def initialize():
     speed = 0
     turn = 0
 
-    reset_legs_fight(darwin)
-    time.sleep(2) 
 
     while True:
         rospy.loginfo("OK")

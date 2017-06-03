@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "darwin_step_by_step")
+set(darwin_step_by_step_MAINTAINER "robotis <robotis@todo.todo>")
+set(darwin_step_by_step_DEPRECATED "")
+set(darwin_step_by_step_VERSION "0.0.1")
+set(darwin_step_by_step_BUILD_DEPENDS "roscpp" "rospy" "std_msgs")
+set(darwin_step_by_step_RUN_DEPENDS "roscpp" "rospy" "std_msgs")
+set(darwin_step_by_step_BUILDTOOL_DEPENDS "catkin")
