@@ -1,7 +1,0 @@
-set(_CATKIN_CURRENT_PACKAGE "darwin_fighter")
-set(darwin_fighter_MAINTAINER "robotis <robotis@todo.todo>")
-set(darwin_fighter_DEPRECATED "")
-set(darwin_fighter_VERSION "0.0.0")
-set(darwin_fighter_BUILD_DEPENDS "roscpp" "rospy" "std_msgs")
-set(darwin_fighter_RUN_DEPENDS "roscpp" "rospy" "std_msgs")
-set(darwin_fighter_BUILDTOOL_DEPENDS "catkin")
