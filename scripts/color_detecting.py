@@ -71,9 +71,9 @@ def identify(frame):
 
 
 
-	cv2.imshow('mask',mask)
-	cv2.imshow('frame',frame)
-	cv2.waitKey(1)
+#	cv2.imshow('mask',mask)
+#	cv2.imshow('frame',frame)
+#	cv2.waitKey(1)
 
 	rospy.loginfo("pub %s" %zones)
 	return zones
