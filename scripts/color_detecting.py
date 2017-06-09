@@ -4,65 +4,84 @@ import rospy
 import sys
 import cv2
 import numpy as np
+from time import time
+from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Image
-from std_msgs.msg import Int32
+from std_msgs.msg import Int8MultiArray
 from cv_bridge import CvBridge, CvBridgeError
 
-z_zones = 0
+pub = rospy.Publisher('/robotis_op/camera/image_vector', Vector3, queue_size=10)
+
+
+z_zones = [0,0,0]
+
+templates = []
+
+for i in range(4):
+	file = "/home/robotis/catkin_ws/src/darwin_detecting/scripts/templates/template_" + str(i) + ".png"
+	templates.append(cv2.imread(file,0))
+
+
+# w,h = template.shape[::-1]
 
 def callback(image_message):
 	#rospy.loginfo("I got an image  at %s " %rospy.get_time())
 	cv_image = CvBridge().imgmsg_to_cv2(image_message, desired_encoding="passthrough")
-	cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
 	z_zones = identify(cv_image)
+	pub.publish(Vector3(z_zones[0],z_zones[1],z_zones[2]))
 	#cv2.imshow('frame', cv_image)
 	#cv2.waitKey(1)
+	
 
 
 def identify(frame):
-	zones = 1
-	konst = 3000
-	lower_blue = np.array([85, 30, 50])
-    	upper_blue = np.array([156, 255, 255])
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    	mask = cv2.inRange(frame, lower_blue, upper_blue)
+	zones = [0,0,0]
+	konst = 250
+	frame = cv2.addWeighted(frame,2.5,np.zeros(frame.shape,frame.dtype),0.0,0.0)
+	hsv= cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
 	
-	cv2.imshow('frame', mask)
-	cv2.waitKey(1)
+	#t_in = rospy.get_time()
+	mask = cv2.inRange(hsv, (160,91,100),(195,230,255))
+	mask = cv2.medianBlur(mask,3)
 	
 
-    	left_top = mask[0:120:1, 0:80:1]
-    	left_bottom = mask[120:240:1, 0:80:1]
-    	right_top = mask[0:120:1, 240:320:1]
-    	right_bottom = mask[120:240:1, 240:320:1]
-    	center_top = mask[0:80:1,80:240:1]
-    	center_center = mask[80:160:1, 80:240:1]
-    	center_bottom = mask[160:240:1, 80:240:1]
-    	summing = [left_top.sum()/255, left_bottom.sum()/255, center_top.sum()/255, center_center.sum()/255, center_bottom.sum()/255, right_top.sum()/255, right_bottom.sum()/255]
-    	rospy.loginfo(summing)
-    	if summing[0] > konst:
-		zones = zones*10 + 0	# robot is on the top left
-	if summing[1] > konst:
-		zones = zones*10 + 1	# robot is on the bottom left
-	if summing[2] > konst:
-		zones = zones*10 + 2	# robot is on the top center
-	if summing[3] > konst:
-		zones = zones*10 + 3	# robot is on the center
-	if summing[4] > konst:
-		zones = zones*10 + 4	# robot is on the bottom center
-	if summing[5] > konst:
-		zones = zones*10 + 5	# robot is on the top right
-	if summing[6] > konst:
-		zones = zones*10 + 6	# robot is on the bottom right
+
+	#t_in = rospy.get_time() - t_in	
+	#rospy.loginfo("1. I got an image  at %s " %t_in)
+	t_in = time()
+
+
+	M = cv2.moments(mask)
+    	area = M['m00']
+    	if area > 0:
+        	cx = int(M['m10'] / area)
+        	cy = int(M['m01'] / area)
+        	cv2.circle(frame, (int(cx), int(cy)), 10, (255, 0, 0), -1)
+		zones = [cx-160, cy-120, 0]
+    	else:
+        	cx = None
+        	cy = None
+		zones = [0, 0, -1]
+	
+	print("area= %s, cx = %s, cy = %s"%(area, cx, cy))
+
+	t_in = time()- t_in	
+	rospy.loginfo("I got an image  at %s " %t_in)
+
+
+
+
+	cv2.imshow('mask',mask)
+	cv2.imshow('frame',frame)
+	cv2.waitKey(1)
+
 	rospy.loginfo("pub %s" %zones)
 	return zones
 
 
 def listener():
-	pub = rospy.Publisher('/robotis_op/camera/camera_detected', Int32, queue_size=10)
 	rospy.Subscriber("/robotis_op/camera/image_raw",Image, callback)
-	rospy.init_node('color_detecting', anonymous=True)
-	pub.publish(z_zones)
+	rospy.init_node('head_detecting', anonymous=True)
 	rospy.spin()
 
 if __name__  ==  '__main__':
