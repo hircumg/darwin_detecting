@@ -35,21 +35,22 @@ def callback(image_message):
 
 
 def identify(frame):
+	t_in = time()
 	zones = [0,0,0]
 	konst = 250
-	frame = cv2.addWeighted(frame,2.5,np.zeros(frame.shape,frame.dtype),0.0,0.0)
+	frame = cv2.addWeighted(frame,2,np.zeros(frame.shape,frame.dtype),0.0,0.0)
 	hsv= cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
 	
-	#t_in = rospy.get_time()
-	mask = cv2.inRange(hsv, (160,91,100),(195,230,255))
-	mask = cv2.medianBlur(mask,3)
+	#mask = cv2.inRange(hsv, (150,91,100),(200,250,255))
+	mask = cv2.inRange(hsv, (0,127,47),(5,255,255))
+	
+	#mask = cv2.medianBlur(mask,3)
 	
 
 
 	#t_in = rospy.get_time() - t_in	
 	#rospy.loginfo("1. I got an image  at %s " %t_in)
-	t_in = time()
-
+	
 
 	M = cv2.moments(mask)
     	area = M['m00']
@@ -70,10 +71,10 @@ def identify(frame):
 
 
 
-
-#	cv2.imshow('mask',mask)
-#	cv2.imshow('frame',frame)
-#	cv2.waitKey(1)
+	frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+	cv2.imshow('mask',mask)
+	cv2.imshow('frame',frame)
+	cv2.waitKey(1)
 
 	rospy.loginfo("pub %s" %zones)
 	return zones
